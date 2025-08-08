@@ -71,8 +71,8 @@ export default function Login() {
         const token = res.data.result.token;
         const refreshToken = res.data.result.refreshToken;
         
-        Cookies.set('authToken', token, { expires: 7, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax' });
-        Cookies.set('refreshToken', refreshToken, { expires: 30, secure: process.env.NODE_ENV === 'production', sameSite: 'Lax' });
+        Cookies.set('authToken', token);
+        Cookies.set('refreshToken', refreshToken);
         
         await fetchProfile();
         await fetchCart();

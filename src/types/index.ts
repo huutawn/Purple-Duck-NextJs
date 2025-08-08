@@ -3,6 +3,7 @@ export type User = {
   email: string;
   firstName:string;
   lastName:string;
+  addresses:AddressResponse[];
   role: string;
 };
 
@@ -116,4 +117,105 @@ export type Category = {
   description: string;
   image: string;
   parentId?: string;
+};
+export type AddToCartBackendRequest = {
+    productId: number;
+    attributeValueIds: number[];
+    quantity: number;
+};
+export type UserAddressResponse = {
+  id: number;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  phone: string;
+  name: string;
+  isDefault: boolean;
+};
+
+export type AttributeValueResponse = {
+  attributeValueId: number;
+  value: string;
+  displayValue: string;
+};
+export type AddressResponse={
+  id:number;
+  userId:string;
+  userName:string;
+  name:string;
+  phoneNumber:string;
+  city:string;
+  district:string;
+  commune:string;
+  address:string;
+  isDefault:boolean;
+}
+
+
+export type ProductVariantResponse = {
+  id: number;
+  productId: number;
+  productName: string;
+  sku: string;
+  price: number;
+  stock: number;
+  image: string;
+  attributes: AttributeResponse[];
+};
+
+export type OrderItemResponse = {
+  id: number;
+  productVariant: ProductVariantResponse;
+  quantity: number;
+  price: number;
+  subTotal: number;
+};
+
+export type SubOrderResponse = {
+  subOrderId: number;
+  orderId: number;
+  userName: string;
+  status: string;
+  orderItems: OrderItemResponse[];
+  subTotal: number;
+  createdAt: string;
+};
+
+export type OrderResponse = {
+  orderId: number;
+  userId: string;
+  userName: string;
+  totalAmount: number; // BigDecimal bên BE sẽ là number
+  shippingFee: number;
+  taxAmount: number;
+  discountAmount: number;
+  couponCode?: string;
+  status: string;
+  paymentMethod: string;
+  userAddress: UserAddressResponse;
+  subOrders: SubOrderResponse[];
+  trackingNumber?: string;
+  shippingCarrier?: string;
+  estimatedDeliveryDate?: string;
+  QRCode?: string;
+  note?: string;
+  createdAt: string;
+};
+
+// Kiểu dữ liệu request cho API tạo order
+export type OrderItemRequest = {
+  productId: number;
+  attributeValueIds: number[];
+  quantity: number;
+};
+
+export type CreateOrderRequest = {
+  items: OrderItemRequest[];
+  shippingAddressId: number;
+  paymentMethod: string;
+  couponCode?: string;
+  notes?: string;
+  fromCart?: boolean;
 };

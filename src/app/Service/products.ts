@@ -110,8 +110,7 @@ const GetTop5MostPurchase = async () => {
         const response = await axiosClient.get(`/products/most_purchase`);
         // Kiểm tra code trả về từ API
         if (response.data.code === 1000) {
-          console.log(response.data.code  )
-          console.log(response.data.result.data)
+        
             return response.data;
         } else {
             console.error('API Error in GetTop5MostPurchase:', response.data.code, response.data.message);
@@ -133,7 +132,50 @@ const GetTop5New = async (params: { page?: number; size?: number } = {}) => {
         const response = await axiosClient.get('/products', {
             params: {
                 page: params.page || 1,
-                size: params.size || 4, // Mặc định 5 sản phẩm mỗi trang
+                size: params.size || 16, // Mặc định 5 sản phẩm mỗi trang
+            },
+        });
+
+        // Kiểm tra code trả về từ API
+        if (response.data.code === 1000) {
+            return response.data;
+        } else {
+            console.error('API Error in GetTop5New:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi lấy 5 sản phẩm mới nhất.');
+        }
+    } catch (error) {
+        console.error('Network Error in GetTop5New:', error);
+        throw error;
+    }
+};
+const GetAllProducts = async (params: { page?: number; size?: number } = {}) => {
+    try {
+        const response = await axiosClient.get('/products', {
+            params: {
+                page: params.page || 1,
+                size: params.size || 15,
+            },
+        });
+
+        // Kiểm tra code trả về từ API
+        if (response.data.code === 1000) {
+            return response.data;
+        } else {
+            console.error('API Error in GetTop5New:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi lấy 5 sản phẩm mới nhất.');
+        }
+    } catch (error) {
+        console.error('Network Error in GetTop5New:', error);
+        throw error;
+    }
+};
+const GetAllProductsByCategory = async (params: {categoryId?:number; page?: number; size?: number } = {}) => {
+    try {
+        const response = await axiosClient.get('/products/category', {
+            params: {
+                categoryId: params.categoryId,
+                page: params.page || 1,
+                size: params.size || 15,
             },
         });
 
@@ -152,6 +194,8 @@ const GetTop5New = async (params: { page?: number; size?: number } = {}) => {
 
 // Export tất cả các hàm để có thể import chúng từ các component khác
 export {
+    GetAllProducts,
+    GetAllProductsByCategory,
     GetAllProductsMyCategory,
     GetByProductId,
     GetTop5MostPurchase,

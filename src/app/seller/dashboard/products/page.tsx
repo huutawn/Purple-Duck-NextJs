@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, TrendingUp, AlertTriangle, Package, Star, Edit, Eye, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/react';
-// import { ChevronDownIcon } from '@heroicons/react/20/solid'; // Nếu dùng Heroicons thay vì lucide-react
 
-import AddProductModal from '@/app/seller/component/AddProductModal'; // Import modal
+import AddProductModal from '@/app/seller/component/AddProductModal';
 import { GetAllProductsMySeller } from '@/app/Service/products';
 import { GetAllCategory } from '@/app/Service/Category';
 
@@ -27,7 +26,7 @@ type ProductVariant = {
 type Product = {
   id: number;
   categoryId: number;
-  categoryName?: string; // THÊM DÒNG NÀY: Để lưu trữ tên danh mục
+  categoryName?: string;
   sellerId: number;
   name: string;
   slug: string;
@@ -53,7 +52,6 @@ type ProductsResponse = {
   };
 };
 
-// Định nghĩa kiểu cho Category item, thêm 'id: "all"' cho tùy chọn "Tất Cả Danh Mục"
 type CategoryOption = { id: number | 'all'; name: string };
 
 const ProductsPage: React.FC = () => {
@@ -65,51 +63,42 @@ const ProductsPage: React.FC = () => {
   const [size, setSize] = useState(10);
   const [totalElements, setTotalElements] = useState(0);
 
-  // State cho danh mục đã chọn (Headless UI)
   const [selectedCategory, setSelectedCategory] = useState<CategoryOption>({ id: 'all', name: 'Tất Cả Danh Mục' });
 
-
-  // Lấy danh sách sản phẩm và danh mục
   useEffect(() => {
     const fetchData = async () => {
       try {
         console.log(`Calling API with page=${page}, size=${size}`);
 
-        // 1. Lấy danh sách danh mục trước
         const categoriesRes = await GetAllCategory();
         let fetchedCategories: CategoryOption[] = [{ id: 'all', name: 'Tất Cả Danh Mục' }];
 
         if (categoriesRes.data && Array.isArray(categoriesRes.data.result)) {
-            // Chỉ thêm các danh mục hợp lệ, không bao gồm 'all' lần nữa
-            fetchedCategories = [...fetchedCategories, ...categoriesRes.data.result.map(cat => ({id: cat.id, name: cat.name}))];
+          fetchedCategories = [...fetchedCategories, ...categoriesRes.data.result.map(cat => ({ id: cat.id, name: cat.name }))];
         } else {
-            console.warn("Dữ liệu danh mục không đúng định dạng:", categoriesRes);
+          console.warn("Dữ liệu danh mục không đúng định dạng:", categoriesRes);
         }
-        setCategories(fetchedCategories); // Cập nhật state danh mục
+        setCategories(fetchedCategories);
 
-        // 2. Lấy danh sách sản phẩm
         const params = { page, size };
         const productsRes = await GetAllProductsMySeller(params);
         setTotalElements(productsRes.result.totalElements);
 
-        // 3. Gán categoryName vào từng sản phẩm
         const productsWithCategoryName: Product[] = productsRes.result.data.map(product => {
           const categoryFound = fetchedCategories.find(cat => cat.id === product.categoryId);
           return {
             ...product,
-            categoryName: categoryFound ? categoryFound.name : 'Không xác định' // Gán tên danh mục
+            categoryName: categoryFound ? categoryFound.name : 'Không xác định'
           };
         });
-        setProducts(productsWithCategoryName); // Cập nhật state sản phẩm đã có tên danh mục
+        setProducts(productsWithCategoryName);
 
       } catch (error) {
         console.error('Lỗi khi lấy dữ liệu:', error);
-        // Xử lý lỗi: ví dụ, xóa cookie và chuyển hướng về trang đăng nhập nếu là lỗi 401
-        // (Đã có trong axios interceptor, nhưng có thể thêm logic ở đây nếu cần phản hồi UI cụ thể)
       }
     };
     fetchData();
-  }, [page, size]); // Chỉ chạy khi page hoặc size thay đổi
+  }, [page, size]);
 
   const getStatusColor = (stock: number) => {
     if (stock === 0) return 'text-red-400 bg-red-400/20';
@@ -123,36 +112,29 @@ const ProductsPage: React.FC = () => {
     return <Package className="w-4 h-4 text-green-400" />;
   };
 
-  // Tính toán chỉ số thống kê
   const totalProducts = totalElements;
   const activeProducts = products.filter(p => p.active).length;
-  // TODO: Cần tính toán lowStockProducts và outOfStockProducts dựa trên dữ liệu hiện tại
-  // Logic này cần lặp qua tất cả productVariants của mỗi sản phẩm
   const lowStockProducts = products.filter(p => p.productVariants.some(v => v.stock > 0 && v.stock <= 10)).length;
   const outOfStockProducts = products.filter(p => p.productVariants.every(v => v.stock === 0)).length;
 
-
-  // Lọc sản phẩm
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.id.toString().toLowerCase().includes(searchTerm.toLowerCase());
 
-    // SỬ DỤNG TRỰC TIẾP product.categoryName để lọc
     const matchesCategory = selectedCategory.id === 'all' ||
                             (product.categoryName && product.categoryName.toLowerCase() === selectedCategory.name.toLowerCase());
 
     return matchesSearch && matchesCategory;
   }).map(product => ({
     ...product,
-    price: `$${Math.min(...product.productVariants.map(v => v.price)).toFixed(2)}`,
-    stock: Math.max(...product.productVariants.map(v => v.stock)), // Lấy stock lớn nhất cho hiển thị tổng quan
+    // SỬA ĐỊNH DẠNG TIỀN TỆ Ở ĐÂY
+    price: `${Math.min(...product.productVariants.map(v => v.price)).toLocaleString('vi-VN')} ₫`,
+    stock: Math.max(...product.productVariants.map(v => v.stock)),
     sold: product.purchase ?? 0,
     variants: product.productVariants.length,
     image: product.coverImage || product.images[0]?.imageUrl || '',
   }));
 
-
-  // Memoize các hàm xử lý
   const handlePageChange = useCallback((newPage: number) => {
     if (newPage >= 1 && newPage <= Math.ceil(totalElements / size)) {
       setPage(newPage);
@@ -161,16 +143,13 @@ const ProductsPage: React.FC = () => {
 
   const handleSizeChange = useCallback((newSize: number) => {
     setSize(newSize);
-    setPage(1); // Quay về trang 1 khi thay đổi kích thước trang
-  }, []);
-
-  // Hàm xử lý khi chọn danh mục từ Headless UI Listbox
-  const handleCategorySelect = useCallback((category: CategoryOption) => {
-    setSelectedCategory(category);
-    // Reset về trang 1 khi thay đổi bộ lọc
     setPage(1);
   }, []);
 
+  const handleCategorySelect = useCallback((category: CategoryOption) => {
+    setSelectedCategory(category);
+    setPage(1);
+  }, []);
 
   return (
     <div className="p-6 space-y-6">

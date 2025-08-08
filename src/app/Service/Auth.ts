@@ -22,8 +22,8 @@ const login = async (email: string, password: string) => {
   return await axiosClient.post("/auth/token", { email, password });
 };
 
-const refreshToken = async (token: string) => {
-  return await axiosClient.post("/auth/refresh", { token });
+const refreshToken = async (token: string, refreshToken: string) => {
+  return await axiosClient.post("/auth/refresh", { token,refreshToken });
 };
 
 // API MỚI: Trao đổi mã ủy quyền Google lấy token từ Backend

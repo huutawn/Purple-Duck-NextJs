@@ -1,19 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, Share2 } from 'lucide-react';
+import { Star, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, Share2 } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Product, ProductVariant } from '@/app/types/product';
 import { GetByProductId } from '@/app/Service/products';
-
-// Import toast và Toaster từ react-hot-toast
-import toast, { Toaster } from 'react-hot-toast'; 
+import toast, { Toaster } from 'react-hot-toast'; // Vẫn import để xử lý thông báo
 
 export default function ProductDetail() {
   const params = useParams();
   const rawIdFromParams = Array.isArray(params?.id) ? params?.id[0] : params?.id;
+  const router = useRouter();
 
   const { addToCart } = useCart();
 
@@ -61,7 +60,6 @@ export default function ProductDetail() {
             setSelectedVariant(defaultVariant);
 
             const initialAttrs: { [key: string]: string } = {};
-            // Đảm bảo rằng bạn khởi tạo các thuộc tính đã chọn dựa trên biến thể mặc định
             defaultVariant.attributes.forEach(attr => {
               if (attr.attributeValue && attr.attributeValue.length > 0) {
                 initialAttrs[attr.attributeName] = attr.attributeValue[0].value;
@@ -69,7 +67,7 @@ export default function ProductDetail() {
             });
             setSelectedAttributes(initialAttrs);
           } else {
-              setError("Sản phẩm này không có biến thể nào.");
+            setError("Sản phẩm này không có biến thể nào.");
           }
         } else {
           setError(res.message || "Không thể tải chi tiết sản phẩm.");
@@ -100,8 +98,6 @@ export default function ProductDetail() {
         const variantAttr = variant.attributes.find(a => a.attributeName === attrName);
         return variantAttr && variantAttr.attributeValue.some(av => av.value === attrValue);
       });
-
-      // Đảm bảo rằng tất cả các thuộc tính bắt buộc đã được chọn
       const requiredAttributeNames = Array.from(new Set(product.productVariants.flatMap(v => v.attributes.map(a => a.attributeName))));
       const allRequiredAttributesSelected = requiredAttributeNames.every(name => selectedAttributes[name] !== undefined && selectedAttributes[name] !== '');
 
@@ -109,7 +105,7 @@ export default function ProductDetail() {
     });
 
     setSelectedVariant(matchedVariant || null);
-    setQuantity(1); // Reset quantity when variant changes
+    setQuantity(1);
   }, [selectedAttributes, product]);
 
   const uniqueProductImages = useMemo(() => {
@@ -118,18 +114,18 @@ export default function ProductDetail() {
       ...(product.coverImage ? [{ imageUrl: product.coverImage, type: 'cover' }] : []),
       ...(product.images || []).map(img => ({ imageUrl: img.imageUrl, type: 'product' })),
       ...(product.productVariants || [])
-        .filter(variant => 
-          variant.image && 
-          !product.images?.some(img => img.imageUrl === variant.image) && 
+        .filter(variant =>
+          variant.image &&
+          !product.images?.some(img => img.imageUrl === variant.image) &&
           variant.image !== product.coverImage
         )
         .map(variant => ({ imageUrl: variant.image, type: 'variant' })),
     ];
     const uniqueMap = new Map<string, { imageUrl: string; type: string }>();
     allImages.forEach(item => {
-      if (!uniqueMap.has(item.imageUrl) || 
-          (uniqueMap.get(item.imageUrl)?.type === 'variant' && (item.type === 'cover' || item.type === 'product')) ||
-          (uniqueMap.get(item.imageUrl)?.type === 'product' && item.type === 'cover')
+      if (!uniqueMap.has(item.imageUrl) ||
+        (uniqueMap.get(item.imageUrl)?.type === 'variant' && (item.type === 'cover' || item.type === 'product')) ||
+        (uniqueMap.get(item.imageUrl)?.type === 'product' && item.type === 'cover')
       ) {
         uniqueMap.set(item.imageUrl, item);
       }
@@ -150,8 +146,6 @@ export default function ProductDetail() {
     }
   }, [selectedVariant, uniqueProductImages]);
 
-
-  // >>> CÁC CÂU LỆNH RETURN ĐỂ XỬ LÝ TRẠNG THÁI LOADING, ERROR, VÀ SẢN PHẨM KHÔNG TÌM THẤY <<<
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -160,7 +154,7 @@ export default function ProductDetail() {
     );
   }
 
-  if (error && !product) { // Chỉ hiển thị lỗi toàn trang nếu không có sản phẩm nào được tải
+  if (error && !product) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -171,7 +165,7 @@ export default function ProductDetail() {
     );
   }
 
-  if (!product) { // Sau khi loading xong mà product vẫn là null (không tìm thấy sản phẩm)
+  if (!product) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -182,89 +176,70 @@ export default function ProductDetail() {
     );
   }
 
-  // >>> ĐẢM BẢO CÁC BIẾN NÀY CHỈ ĐƯỢC KHAI BÁO MỘT LẦN VÀ Ở ĐÂY (SAU CÁC LỆNH RETURN CÓ ĐIỀU KIỆN) <<<
-  // Vì các kiểm tra trên đã đảm bảo product không phải là null ở đây,
-  // nên bạn có thể truy cập product.thuocTinh mà không cần optional chaining `?.`
   const mainDisplayImage = selectedVariant?.image || product.coverImage || uniqueProductImages[selectedImageIndex]?.imageUrl || '/placeholder.png';
-
-  const discountPercentage = 0; // Giá trị cố định, cần tính toán thực tế nếu có
+  const discountPercentage = 0;
   const displayPrice = selectedVariant ? selectedVariant.price : (product.productVariants[0]?.price || 0);
-  const displayOriginalPrice = 0; // Giá trị cố định, cần tính toán thực tế nếu có
+  const displayOriginalPrice = 0;
   const displayStock = selectedVariant ? selectedVariant.stock : (product.productVariants[0]?.stock || 0);
   const totalReviews = product.purchase ?? 0;
-  const fixedRating = 5; // Giá trị cố định, cần lấy từ dữ liệu thực tế
+  const fixedRating = 5;
 
-  const handleAddToCart = async () => {
-    // Xóa lỗi hiển thị trên UI trước khi thêm vào giỏ hàng
-    setError(null); 
-
+  const handleAction = async (action: 'add' | 'buy') => {
+    setError(null);
     if (!selectedVariant) {
-        // Sử dụng toast.error thay vì setError để hiển thị lỗi thông báo
-        toast.error("Vui lòng chọn một biến thể sản phẩm.");
-        return;
+      toast.error("Vui lòng chọn một biến thể sản phẩm.");
+      return;
     }
     if (quantity <= 0) {
-        toast.error("Số lượng phải lớn hơn 0.");
-        return;
+      toast.error("Số lượng phải lớn hơn 0.");
+      return;
     }
     if (displayStock === 0) {
-        toast.error("Sản phẩm đã hết hàng.");
-        return;
+      toast.error("Sản phẩm đã hết hàng.");
+      return;
     }
     if (quantity > displayStock) {
-        toast.error(`Số lượng yêu cầu vượt quá số lượng tồn kho (${displayStock}).`);
-        return;
+      toast.error(`Số lượng yêu cầu vượt quá số lượng tồn kho (${displayStock}).`);
+      return;
     }
-
-    const attributeValueIds: number[] = selectedVariant.attributes.flatMap(attr => 
-      attr.attributeValue.map(val => val.attributeValueId)
-    );
-
-    if (attributeValueIds.length === 0 && selectedVariant.attributes.length > 0) {
-        // Đây là lỗi logic nếu biến thể có thuộc tính nhưng không có ID giá trị
-        toast.error("Không thể thêm vào giỏ hàng: Thiếu thông tin thuộc tính biến thể.");
-        return;
-    }
-
     const requiredAttributeNames = Array.from(new Set(product.productVariants.flatMap(v => v.attributes.map(a => a.attributeName))));
     const allRequiredAttributesSelected = requiredAttributeNames.every(name => selectedAttributes[name] !== undefined && selectedAttributes[name] !== '');
-
     if (!allRequiredAttributesSelected) {
       toast.error("Vui lòng chọn đầy đủ các thuộc tính của sản phẩm.");
       return;
     }
+    const attributeValueIds: number[] = selectedVariant.attributes.flatMap(attr =>
+      attr.attributeValue.map(val => val.attributeValueId)
+    );
+    if (attributeValueIds.length === 0 && selectedVariant.attributes.length > 0) {
+      toast.error("Không thể thêm vào giỏ hàng: Thiếu thông tin thuộc tính biến thể.");
+      return;
+    }
 
     try {
-        await addToCart(product, quantity, selectedVariant.id, attributeValueIds);
-        // Sử dụng toast.success cho thông báo thành công
-        toast.success(`Đã thêm ${quantity} x ${product.name} vào giỏ hàng thành công!`, {
-            position: 'top-right' // Tùy chỉnh vị trí hiển thị toast
-        });
+      await addToCart(product, quantity, selectedVariant.id, attributeValueIds);
+      toast.success(`Đã thêm ${quantity} x ${product.name} vào giỏ hàng thành công!`, { position: 'top-right' });
+      if (action === 'buy') {
+        router.push('/checkout');
+      }
     } catch (err: any) {
-        console.error("Lỗi khi thêm vào giỏ hàng:", err);
-        // Sử dụng toast.error cho thông báo lỗi
-        toast.error(err.message || "Đã xảy ra lỗi khi thêm vào giỏ hàng.", {
-            position: 'top-right' // Tùy chỉnh vị trí hiển thị toast
-        });
+      console.error("Lỗi khi thực hiện hành động giỏ hàng:", err);
+      toast.error(err.message || "Đã xảy ra lỗi khi thêm vào giỏ hàng.", { position: 'top-right' });
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-        {/* Thêm component Toaster vào đây, thường là ở gốc của ứng dụng hoặc component cha */}
-        <Toaster position="top-right" richColors /> 
-        {/* `richColors` thêm màu sắc mặc định cho success/error/warning */}
-
+      <Toaster position="top-right"  />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Product Images */}
+            {/* Ảnh sản phẩm */}
             <div>
               <div className="mb-4 relative">
                 <Image
                   src={mainDisplayImage}
-                  alt={product.name} // product không phải null ở đây
+                  alt={product.name}
                   width={600}
                   height={600}
                   className="w-full h-96 object-cover rounded-lg"
@@ -297,7 +272,7 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* Product Details */}
+            {/* Chi tiết sản phẩm */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
@@ -330,51 +305,52 @@ export default function ProductDetail() {
                   <>
                     <span className="text-xl text-gray-500 line-through">${displayOriginalPrice.toFixed(2)}</span>
                     <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
-                      Save {discountPercentage}%
+                      Tiết kiệm {discountPercentage}%
                     </span>
                   </>
                 )}
               </div>
 
-              <p className="text-gray-600 mb-6 leading-relaxed">{product.metaDescription || product.metaDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.'}</p>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                {product.metaDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
+              </p>
 
-              {/* Dynamic Attribute Selection (Size, Color, etc.) */}
-              {/* <div className="text-red-600 text-sm mb-4 p-2 border border-red-300 bg-red-50 rounded-lg">
-                {error} 
-              </div> */}
-              {/* Bạn có thể xóa div lỗi này nếu muốn tất cả lỗi đều dùng toast */}
+              {error && (
+                <div className="text-red-600 text-sm mb-4 p-2 border border-red-300 bg-red-50 rounded-lg">
+                  {error}
+                </div>
+              )}
 
-
-              {product.productVariants && product.productVariants.length > 0 && Array.from(new Set(product.productVariants.flatMap(v => v.attributes.map(attr => attr.attributeName))))
+              {product.productVariants && product.productVariants.length > 0 && Array.from(new Set(product.productVariants.flatMap(v => v.attributes.map(a => a.attributeName))))
                 .map(attrName => (
                   <div key={attrName} className="mb-6">
                     <h3 className="font-medium mb-3 capitalize">{attrName}</h3>
                     <div className="flex flex-wrap gap-2">
                       {Array.from(new Set(
-                            product.productVariants
-                            .flatMap(v => v.attributes)
-                            .filter(attr => attr.attributeName === attrName)
-                            .flatMap(attr => attr.attributeValue.map(av => av.value))
-                          )).map((attrValue) => (
-                            <button
-                              key={attrValue}
-                              onClick={() => handleAttributeChange(attrName, attrValue)}
-                              className={`px-4 py-2 border rounded-lg transition-colors ${
-                                selectedAttributes[attrName] === attrValue
-                                  ? 'border-purple-600 bg-purple-50 text-purple-600'
-                                  : 'border-gray-300 hover:border-gray-400'
-                              }`}
-                            >
-                              {attrValue}
-                            </button>
-                          ))}
+                          product.productVariants
+                          .flatMap(v => v.attributes)
+                          .filter(attr => attr.attributeName === attrName)
+                          .flatMap(attr => attr.attributeValue.map(av => av.value))
+                        )).map((attrValue) => (
+                          <button
+                            key={attrValue}
+                            onClick={() => handleAttributeChange(attrName, attrValue)}
+                            className={`px-4 py-2 border rounded-lg transition-colors ${
+                              selectedAttributes[attrName] === attrValue
+                                ? 'border-purple-600 bg-purple-50 text-purple-600'
+                                : 'border-gray-300 hover:border-gray-400'
+                            }`}
+                          >
+                            {attrValue}
+                          </button>
+                        ))}
                     </div>
                   </div>
                 ))}
 
-              {/* Quantity Selection */}
+              {/* Lựa chọn số lượng */}
               <div className="mb-6">
-                <h3 className="font-medium mb-3">Quantity</h3>
+                <h3 className="font-medium mb-3">Số lượng</h3>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -392,48 +368,52 @@ export default function ProductDetail() {
                     <Plus className="w-4 h-4" />
                   </button>
                   <span className="text-sm text-gray-500 ml-4">
-                    {displayStock} items available
+                    {displayStock} sản phẩm có sẵn
                   </span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Các nút hành động */}
               <div className="flex space-x-4 mb-8">
                 <button
-                  onClick={handleAddToCart}
+                  onClick={() => handleAction('add')}
                   className="flex-1 bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center space-x-2 font-medium"
                   disabled={!selectedVariant || displayStock === 0}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span>Add to Cart</span>
+                  <span>Thêm vào giỏ hàng</span>
                 </button>
-                <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Heart className="w-5 h-5" />
+                <button
+                  onClick={() => handleAction('buy')}
+                  className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 font-medium"
+                  disabled={!selectedVariant || displayStock === 0}
+                >
+                  <span>Mua ngay</span>
                 </button>
               </div>
 
-              {/* Product Features */}
+              {/* Các tính năng sản phẩm */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm border-t pt-6">
                 <div className="flex items-center space-x-2">
                   <Truck className="w-5 h-5 text-purple-600" />
-                  <span>Free Shipping</span>
+                  <span>Giao hàng miễn phí</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Shield className="w-5 h-5 text-purple-600" />
-                  <span>Secure Payment</span>
+                  <span>Thanh toán an toàn</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RefreshCw className="w-5 h-5 text-purple-600" />
-                  <span>Easy Returns</span>
+                  <span>Trả hàng dễ dàng</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Product Tabs */}
+          {/* Các tab sản phẩm */}
           <div className="border-t">
             <div className="flex border-b">
-              {['description', 'specifications', 'reviews'].map((tab) => (
+              {['description', 'specifications', 'reviews'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -443,7 +423,9 @@ export default function ProductDetail() {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  {tab}
+                  {tab === 'description' && 'Mô tả'}
+                  {tab === 'specifications' && 'Thông số kỹ thuật'}
+                  {tab === 'reviews' && 'Đánh giá'}
                 </button>
               ))}
             </div>
@@ -451,28 +433,28 @@ export default function ProductDetail() {
             <div className="p-6">
               {activeTab === 'description' && (
                 <div className="prose max-w-none">
-                  <h3 className="text-lg font-medium mb-4">Product Description</h3>
+                  <h3 className="text-lg font-medium mb-4">Mô tả sản phẩm</h3>
                   <p className="text-gray-600 leading-relaxed mb-4">
-                    {product.metaDescription || product.metaDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
+                    {product.metaDescription || product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
                   </p>
                 </div>
               )}
 
               {activeTab === 'specifications' && (
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Specifications</h3>
+                  <h3 className="text-lg font-medium mb-4">Thông số kỹ thuật</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="font-medium">Brand:</span>
+                        <span className="font-medium">Thương hiệu:</span>
                         <span>{product.sellerId}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium">Category:</span>
+                        <span className="font-medium">Danh mục:</span>
                         <span>{product.categoryName || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="font-medium">SKU:</span>
+                        <span className="font-medium">Mã sản phẩm (SKU):</span>
                         <span>{selectedVariant?.sku || 'N/A'}</span>
                       </div>
                     </div>
@@ -484,7 +466,7 @@ export default function ProductDetail() {
                         </div>
                       ))}
                       <div className="flex justify-between">
-                        <span className="font-medium">Warranty:</span>
+                        <span className="font-medium">Bảo hành:</span>
                         <span>{product.warrantyInfo || 'N/A'}</span>
                       </div>
                     </div>
@@ -494,7 +476,7 @@ export default function ProductDetail() {
 
               {activeTab === 'reviews' && (
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Customer Reviews</h3>
+                  <h3 className="text-lg font-medium mb-4">Đánh giá của khách hàng</h3>
                   {totalReviews > 0 ? (
                     <div className="space-y-6">
                       <p className="text-gray-600">Sản phẩm này có {totalReviews} lượt mua.</p>

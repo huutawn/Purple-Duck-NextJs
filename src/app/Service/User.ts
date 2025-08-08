@@ -10,4 +10,6 @@ const updateMyInfo = async (id: number, data: object) => {
   });
 };
 
+
+
 export { myInfo, updateMyInfo };

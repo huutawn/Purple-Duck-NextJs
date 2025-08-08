@@ -13,7 +13,7 @@ import {
   BarChart3,
   Bell
 } from 'lucide-react';
-import { PageType } from '../layout'; // Import PageType từ layout
+import { PageType } from '@/app/seller/dashboard/layout'; // Import PageType từ layout
 import Link from 'next/link';
 import Cookies from 'js-cookie'; // Import để xóa cookies
 
