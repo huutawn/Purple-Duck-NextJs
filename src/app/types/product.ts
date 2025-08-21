@@ -39,6 +39,7 @@ export type Product = {
   categoryName?: string; // THÊM DÒNG NÀY: Để lưu trữ tên danh mục
   sellerId: number;
   name: string;
+  description:string;
   slug: string;
   coverImage: string;
   images: { id: number; productId: number; variantId: number | null; imageUrl: string; displayOrder: number; createdAt: string }[];
@@ -64,8 +65,10 @@ export type ProductsResponse = {
 export type CreateProductRequest = {
   categoryId: number;
   name: string;
+  description:string,
   slug: string;
   images: string[];
+  metaDescription:string;
   coverImage: string;
   warrantyInfo: string;
   variants: Variant[];

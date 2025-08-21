@@ -5,11 +5,11 @@ import Cookies from "js-cookie";
 import { refreshToken } from "@/app/Service/Auth";
 
 export const axiosClient = axios.create({
-  baseURL: "http://localhost:8080/api/", // Đảm bảo URL này là đúng
-  timeout: 30000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/",
+  timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Interceptor cho request: Tự động thêm authToken vào header (CHỈ ĐĂNG KÝ MỘT LẦN)

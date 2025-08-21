@@ -123,17 +123,7 @@ export type AddToCartBackendRequest = {
     attributeValueIds: number[];
     quantity: number;
 };
-export type UserAddressResponse = {
-  id: number;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  phone: string;
-  name: string;
-  isDefault: boolean;
-};
+
 
 export type AttributeValueResponse = {
   attributeValueId: number;
@@ -179,6 +169,7 @@ export type SubOrderResponse = {
   userName: string;
   status: string;
   orderItems: OrderItemResponse[];
+  address: AddressResponse;
   subTotal: number;
   createdAt: string;
 };
@@ -194,7 +185,7 @@ export type OrderResponse = {
   couponCode?: string;
   status: string;
   paymentMethod: string;
-  userAddress: UserAddressResponse;
+  userAddress: AddressResponse;
   subOrders: SubOrderResponse[];
   trackingNumber?: string;
   shippingCarrier?: string;
@@ -203,7 +194,18 @@ export type OrderResponse = {
   note?: string;
   createdAt: string;
 };
+export type UserResponse={
+  id:string;
+  email:string;
+  firstName:string;
+  lastName:string;
+  picture:string;
+  tokenVerify:string;
+  timeCreateToken:Date;
+  isVerified:boolean;
+  dob:Date;
 
+}
 // Kiểu dữ liệu request cho API tạo order
 export type OrderItemRequest = {
   productId: number;

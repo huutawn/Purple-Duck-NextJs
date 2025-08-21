@@ -20,7 +20,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-400 mb-6">
-              Your premium destination for quality products and exceptional shopping experience.
+              Điểm đến cao cấp của bạn cho các sản phẩm chất lượng và trải nghiệm mua sắm đặc biệt.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-purple-400 transition-colors">
@@ -40,31 +40,31 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Quick Links</h3>
+            <h3 className="font-semibold text-lg mb-4">Liên kết nhanh</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Home
+Trang chủ
                 </Link>
               </li>
               <li>
                 <Link href="/products" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Products
+Sản phẩm
                 </Link>
               </li>
               <li>
                 <Link href="/category/electronics" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Categories
+Danh mục
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  About Us
+Giới thiệu
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Contact
+Liên hệ
                 </Link>
               </li>
             </ul>
@@ -72,26 +72,26 @@ export default function Footer() {
 
           {/* Customer Support */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Customer Support</h3>
+            <h3 className="font-semibold text-lg mb-4">Hỗ trợ khách hàng</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/help" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Help Center
+Trung tâm trợ giúp
                 </Link>
               </li>
               <li>
                 <Link href="/shipping" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Shipping Info
+Thông tin vận chuyển
                 </Link>
               </li>
               <li>
                 <Link href="/returns" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Returns & Exchanges
+Đổi trả & Hoàn hịnh
                 </Link>
               </li>
               <li>
                 <Link href="/track-order" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Track Your Order
+Theo dõi đơn hàng
                 </Link>
               </li>
               <li>
@@ -104,15 +104,15 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
+            <h3 className="font-semibold text-lg mb-4">Liên hệ chúng tôi</h3>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-purple-400" />
-                <span className="text-gray-400">123 Commerce St, City, State 12345</span>
+                <span className="text-gray-400">123 Đường Thương Mại, Thành Phố, Việt Nam</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-purple-400" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">+84 (028) 123-4567</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-5 h-5 text-purple-400" />
@@ -125,17 +125,17 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm">
-              © 2024 PurpleDuck. All rights reserved.
+              © 2024 PurpleDuck. Tất cả quyền được bảo lưu.
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">
-                Privacy Policy
+Chính sách bảo mật
               </Link>
               <Link href="/terms" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">
-                Terms of Service
+Điều khoản dịch vụ
               </Link>
               <Link href="/cookies" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">
-                Cookie Policy
+Chính sách Cookie
               </Link>
             </div>
           </div>

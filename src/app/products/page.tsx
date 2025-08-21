@@ -1,9 +1,10 @@
 'use client';
+import { useSearchParams } from 'next/navigation'; // Import hook để lấy query params
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Filter, Grid, List, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/common/ProductCard';
-import { GetAllProducts, GetAllProductsByCategory } from '@/app/Service/products'; // Thêm GetAllProductsByCategory
+import { GetAllProducts, GetAllProductsByCategory,searchProduct } from '@/app/Service/products'; // Thêm GetAllProductsByCategory
 import { GetAllCategory } from '@/app/Service/Category';
 
 import { Product } from '@/types'; 
@@ -22,6 +23,10 @@ interface ProductWithMinPrice extends Product {
 }
 
 export default function Products() {
+  const searchParams = useSearchParams();
+  // --- SỬA LỖI: KIỂM TRA searchParams CÓ TỒN TẠI TRƯỚC KHI GỌI GET ---
+  const [keyword, setKeyword] = useState('');
+
   const [products, setProducts] = useState<ProductWithMinPrice[]>([]);
   const [categories, setCategories] = useState<CategoryForFilter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,10 +39,42 @@ export default function Products() {
 
   // State cho bộ lọc
   const [sortBy, setSortBy] = useState('featured');
-  const [priceRange, setPriceRange] = useState([0, 2000]); // Giá trị tối đa giả định
+  const [selectedPriceRange, setSelectedPriceRange] = useState('all'); // Khoảng giá đã chọn
   const [selectedCategory, setSelectedCategory] = useState('all'); // Lưu name hoặc 'all'
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Định nghĩa các khoảng giá cố định
+  const priceRanges = [
+    { id: 'all', label: 'Tất cả giá', min: 0, max: Infinity },
+    { id: 'under-100k', label: 'Dưới 100K', min: 0, max: 100000 },
+    { id: '100k-500k', label: '100K - 500K', min: 100000, max: 500000 },
+    { id: '500k-1m', label: '500K - 1M', min: 500000, max: 1000000 },
+    { id: '1m-2m', label: '1M - 2M', min: 1000000, max: 2000000 },
+    { id: '2m-5m', label: '2M - 5M', min: 2000000, max: 5000000 },
+    { id: 'above-5m', label: 'Trên 5M', min: 5000000, max: Infinity }
+  ];
+  
+  // Utility function to format Vietnamese currency
+  const formatVND = (amount: number): string => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
+  // Utility function to format price in short form
+  const formatVNDShort = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `${(amount / 1000000).toFixed(1)}M đ`;
+    }
+    if (amount >= 1000) {
+      return `${(amount / 1000).toFixed(0)}K đ`;
+    }
+    return `${amount} đ`;
+  };
   
   // Hàm xử lý dữ liệu sản phẩm từ API
   const processProductData = (products: any[], fetchedCategories: CategoryForFilter[]): ProductWithMinPrice[] => {
@@ -59,11 +96,15 @@ export default function Products() {
     });
   };
   
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
     setPage(1); // Reset về trang 1 khi thay đổi category
   };
-
+  useEffect(() => {
+    const newKeyword = searchParams?.get('keyword') || '';
+    setKeyword(newKeyword);
+    setPage(1); // reset page mỗi khi keyword thay đổi
+  }, [searchParams]);
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -85,7 +126,11 @@ export default function Products() {
         let productsRes;
         if (selectedCategory === 'all') {
           // GỌI API GetAllProduct KHI CHỌN "Tất cả"
-          productsRes = await GetAllProducts({ page, size });
+          if(keyword){
+             productsRes = await searchProduct({ keyword,  page, size });
+          }
+          else{
+          productsRes = await GetAllProducts({ page, size });}
         } else {
           // GỌI API GetAllProductsByCategory KHI CHỌN 1 CATEGORY CỤ THỂ
           const categoryToFilter = fetchedCategories.find(cat => cat.name === selectedCategory);
@@ -113,13 +158,20 @@ export default function Products() {
     };
 
     fetchAllData();
-  }, [page, size, selectedCategory]); // Dependency array bao gồm selectedCategory
+  }, [page, size, selectedCategory,keyword]); // Dependency array bao gồm selectedCategory
 
   const filteredAndSortedProducts = useMemo(() => {
     let tempProducts = [...products];
     
-    // TẠM THỜI CHỈ SẮP XẾP VÌ CHỨC NĂNG LỌC ĐÃ ĐƯỢC CHUYỂN LÊN useEffect
-    // Logic lọc theo Category và Price Range đã được xử lý trong useEffect khi gọi API
+    // Lọc theo khoảng giá đã chọn
+    if (selectedPriceRange !== 'all') {
+      const selectedRange = priceRanges.find(range => range.id === selectedPriceRange);
+      if (selectedRange) {
+        tempProducts = tempProducts.filter(product => {
+          return product.minPrice >= selectedRange.min && product.minPrice <= selectedRange.max;
+        });
+      }
+    }
     
     // Sắp xếp
     switch (sortBy) {
@@ -140,15 +192,15 @@ export default function Products() {
     }
 
     return tempProducts;
-  }, [products, sortBy]); // products và sortBy là dependencies
+  }, [products, sortBy, selectedPriceRange, priceRanges]); // thêm selectedPriceRange vào dependencies
 
-  const handlePriceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setPriceRange([0, parseInt(e.target.value)]);
+  const handlePriceRangeChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPriceRange(e.target.value);
   }, []);
 
   const handleClearFilters = () => {
     setSelectedCategory('all');
-    setPriceRange([0, 2000]);
+    setSelectedPriceRange('all');
   };
 
   const handlePageChange = (newPage: number) => {
@@ -231,53 +283,52 @@ export default function Products() {
               {/* Category Filter */}
               <div className="mb-6">
                 <h4 className="font-medium mb-3">Danh mục</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="category"
-                      value="all"
-                      checked={selectedCategory === 'all'}
-                      onChange={handleCategoryChange}
-                      className="text-purple-600 focus:ring-purple-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 capitalize">Tất cả</span>
-                  </label>
-                  {categories.map((category) => (
-                    <label key={category.id} className="flex items-center">
-                      <input
-                        type="radio"
-                        name="category"
-                        value={category.name}
-                        checked={selectedCategory === category.name}
-                        onChange={handleCategoryChange}
-                        className="text-purple-600 focus:ring-purple-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700 capitalize">
+                <div className="relative">
+                  <select
+                    value={selectedCategory}
+                    onChange={handleCategoryChange}
+                    className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  >
+                    <option value="all">Tất cả danh mục</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
                         {category.name}
-                      </span>
-                    </label>
-                  ))}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
 
               {/* Price Range Filter */}
               <div className="mb-6">
                 <h4 className="font-medium mb-3">Khoảng giá</h4>
-                <div className="space-y-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="2000" // Giá trị tối đa cứng, có thể làm động sau
-                    value={priceRange[1]}
-                    onChange={handlePriceChange}
-                    className="w-full accent-purple-600"
-                  />
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
-                  </div>
+                <div className="relative">
+                  <select
+                    value={selectedPriceRange}
+                    onChange={handlePriceRangeChange}
+                    className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                  >
+                    {priceRanges.map((range) => (
+                      <option key={range.id} value={range.id}>
+                        {range.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
+                
+                {/* Selected Price Range Display */}
+                {selectedPriceRange !== 'all' && (
+                  <div className="mt-3 bg-purple-50 p-3 rounded-lg">
+                    <div className="text-sm font-medium text-purple-700">
+                      Đang lọc theo:
+                    </div>
+                    <div className="text-sm text-purple-600 font-semibold">
+                      {priceRanges.find(range => range.id === selectedPriceRange)?.label}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Clear Filters */}

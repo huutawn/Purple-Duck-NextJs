@@ -169,6 +169,28 @@ const GetAllProducts = async (params: { page?: number; size?: number } = {}) => 
         throw error;
     }
 };
+const searchProduct = async (params: { keyword?:string;page?: number; size?: number } = {}) => {
+    try {
+        const response = await axiosClient.get('/products/search', {
+            params: {
+                keyword: params.keyword,
+                page: params.page || 1,
+                size: params.size || 15,
+            },
+        });
+
+        // Kiểm tra code trả về từ API
+        if (response.data.code === 1000) {
+            return response.data;
+        } else {
+            console.error('API Error in GetTop5New:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi lấy 5 sản phẩm mới nhất.');
+        }
+    } catch (error) {
+        console.error('Network Error in GetTop5New:', error);
+        throw error;
+    }
+};
 const GetAllProductsByCategory = async (params: {categoryId?:number; page?: number; size?: number } = {}) => {
     try {
         const response = await axiosClient.get('/products/category', {
@@ -201,5 +223,6 @@ export {
     GetTop5MostPurchase,
     GetAllProductsMySeller,
     createProduct,
-    GetTop5New
+    GetTop5New,
+    searchProduct
 };

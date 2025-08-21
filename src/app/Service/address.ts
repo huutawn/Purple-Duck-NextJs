@@ -12,7 +12,7 @@ export type CreateAddressReq={
 const getAddress = async ()=>{
   try {
          // Giả sử endpoint để tạo order là /orders
-         const response = await axiosClient.post('/address', );
+         const response = await axiosClient.get('/address' );
  
          if (response.data.code === 1000) {
              return response.data; // Trả về toàn bộ data response nếu thành công
@@ -26,10 +26,10 @@ const getAddress = async ()=>{
      }
 }
 
-const createAddress = async ()=>{
+const createAddress = async (createAddressData:CreateAddressReq)=>{
   try {
          // Giả sử endpoint để tạo order là /orders
-         const response = await axiosClient.post('/address', );
+         const response = await axiosClient.post('/address',createAddressData );
  
          if (response.data.code === 1000) {
              return response.data; // Trả về toàn bộ data response nếu thành công

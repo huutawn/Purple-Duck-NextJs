@@ -50,10 +50,10 @@ export default function SellerRegister() {
           ...prev,
           storeLogo: logoUrl,
         }));
-        toast.success('Logo uploaded successfully!');
+        toast.success('Tải lên logo thành công!');
       } catch (error) {
         console.error('Error uploading logo:', error);
-        toast.error('Failed to upload logo. Please try again.');
+        toast.error('Tải lên logo thất bại. Vui lòng thử lại.');
       } finally {
         setIsUploading(false);
       }
@@ -76,15 +76,15 @@ export default function SellerRegister() {
       
       // Xử lý success dựa trên code (giả sử code === 200 hoặc code === 0 là success, adjust nếu khác)
       if (createResponse.data.code === 1000) { // Hoặc check createResponse.data.resulte nếu cần
-        toast.success('Store created successfully!');
+        toast.success('Tạo cửa hàng thành công!');
         Cookies.set('roles', 'SELLER'); // Set lại roles = SELLER
         router.push('/seller'); // Redirect sang trang seller sau submit thành công
       } else {
-        toast.error('Failed to create store. Please try again.');
+        toast.error('Tạo cửa hàng thất bại. Vui lòng thử lại.');
       }
     } catch (error) {
       console.error('Error in submission:', error);
-      toast.error('An error occurred. Please try again.');
+      toast.error('Đã xảy ra lỗi. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +98,7 @@ export default function SellerRegister() {
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-6 transition-colors">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
+Về trang chủ
             </Link>
             
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -106,15 +106,15 @@ export default function SellerRegister() {
                 <Store className="w-8 h-8 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
-                Become a Seller
+Trở thành Người bán
               </span>
             </div>
             
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Start Your Store Journey
+Bắt đầu hành trình cửa hàng của bạn
             </h1>
             <p className="text-gray-600">
-              Join thousands of successful sellers on PurpleDuck and grow your business
+Tham gia cùng hàng ngàn người bán thành công trên PurpleDuck và phát triển doanh nghiệp của bạn
             </p>
           </div>
 
@@ -124,22 +124,22 @@ export default function SellerRegister() {
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <Store className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-medium text-gray-900">Your Own Store</h3>
-              <p className="text-sm text-gray-600">Create your branded storefront</p>
+              <h3 className="font-medium text-gray-900">Cửa hàng riêng</h3>
+              <p className="text-sm text-gray-600">Tầo cửa hàng thương hiệu của riêng bạn</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <CheckCircle className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="font-medium text-gray-900">Easy Setup</h3>
-              <p className="text-sm text-gray-600">Get started in minutes</p>
+              <h3 className="font-medium text-gray-900">Thiết lập dễ dàng</h3>
+              <p className="text-sm text-gray-600">Bắt đầu chỉ trong vài phút</p>
             </div>
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                 <span className="text-purple-600 font-bold text-lg">$</span>
               </div>
-              <h3 className="font-medium text-gray-900">Low Fees</h3>
-              <p className="text-sm text-gray-600">Competitive commission rates</p>
+              <h3 className="font-medium text-gray-900">Phí thấp</h3>
+              <p className="text-sm text-gray-600">Mức phí hoa hồng cạnh tranh</p>
             </div>
           </div>
 
@@ -147,7 +147,7 @@ export default function SellerRegister() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Name *
+Tên cửa hàng *
               </label>
               <input
                 type="text"
@@ -155,17 +155,17 @@ export default function SellerRegister() {
                 value={formData.storeName}
                 onChange={handleInputChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Enter your store name"
+                placeholder="Nhập tên cửa hàng của bạn"
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
-                This will be displayed to customers as your brand name
+Tên này sẽ được hiển thị cho khách hàng như tên thương hiệu của bạn
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Description *
+Mô tả cửa hàng *
               </label>
               <textarea
                 name="storeDescription"
@@ -173,17 +173,17 @@ export default function SellerRegister() {
                 onChange={handleInputChange}
                 rows={4}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                placeholder="Describe your store, products, and what makes you unique..."
+                placeholder="Mô tả cửa hàng, sản phẩm và điều gì làm bạn đặc biệt..."
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
-                Tell customers about your store and what you sell (minimum 50 characters)
+Giới thiệu với khách hàng về cửa hàng và sản phẩm của bạn (tối thiểu 50 ký tự)
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Logo
+Logo cửa hàng
               </label>
               <div className="flex items-center space-x-4">
                 <div className="flex-1">
@@ -199,10 +199,10 @@ export default function SellerRegister() {
                     <label htmlFor="storeLogo" className="cursor-pointer">
                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                       <p className="text-sm text-gray-600">
-                        Click to upload your store logo {isUploading ? '(Uploading...)' : ''}
+                        Nhấp để tải lên logo cửa hàng {isUploading ? '(Đang tải lên...)' : ''}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        PNG, JPG up to 5MB (recommended: 200x200px)
+PNG, JPG tối đa 5MB (khuyến nghị: 200x200px)
                       </p>
                     </label>
                   </div>
@@ -211,7 +211,7 @@ export default function SellerRegister() {
                   <div className="w-24 h-24 border border-gray-200 rounded-lg overflow-hidden">
                     <img
                       src={logoPreview}
-                      alt="Logo preview"
+                      alt="Xem trước logo"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -228,15 +228,15 @@ export default function SellerRegister() {
                   className="mt-1 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                 />
                 <span className="text-sm text-gray-700">
-                  I agree to the{' '}
+                  Tôi đồng ý với{' '}
                   <Link href="/terms" className="text-purple-600 hover:text-purple-700 font-medium">
-                    Terms of Service
+                    Điều khoản dịch vụ
                   </Link>{' '}
-                  and{' '}
+                  và{' '}
                   <Link href="/seller-policy" className="text-purple-600 hover:text-purple-700 font-medium">
-                    Seller Policy
+                    Chính sách người bán
                   </Link>
-                  . I understand that my store will be reviewed before approval.
+                  . Tôi hiểu rằng cửa hàng của tôi sẽ được xem xét trước khi phê duyệt.
                 </span>
               </label>
             </div>
@@ -249,10 +249,10 @@ export default function SellerRegister() {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Creating Your Store...
+                  Đang tạo cửa hàng...
                 </div>
               ) : (
-                'Create My Store'
+                'Tạo cửa hàng của tôi'
               )}
             </button>
           </form>
@@ -260,9 +260,9 @@ export default function SellerRegister() {
           {/* Additional Info */}
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
-              Already have a seller account?{' '}
+              Đã có tài khoản người bán?{' '}
               <Link href="/seller" className="text-purple-600 hover:text-purple-700 font-medium">
-                Go to Seller Dashboard
+                Đi tới Trang quản lý người bán
               </Link>
             </p>
           </div>

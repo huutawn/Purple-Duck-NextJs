@@ -7,7 +7,8 @@ import { Star, ShoppingCart, Minus, Plus, Truck, Shield, RefreshCw, Share2 } fro
 import { useCart } from '@/hooks/useCart';
 import { Product, ProductVariant } from '@/app/types/product';
 import { GetByProductId } from '@/app/Service/products';
-import toast, { Toaster } from 'react-hot-toast'; // Vẫn import để xử lý thông báo
+import toast, { Toaster } from 'react-hot-toast';
+import { createOrder, OrderItemRequest, CreateOrderRequest } from '@/app/Service/Order';
 
 export default function ProductDetail() {
   const params = useParams();
@@ -49,7 +50,6 @@ export default function ProductDetail() {
 
       try {
         const res = await GetByProductId(productIdNum);
-        console.log('Product Detail API Response:', res);
 
         if (res.code === 1000 && res.result) {
           const fetchedProduct: Product = res.result;
@@ -90,22 +90,29 @@ export default function ProductDetail() {
     }));
   }, []);
 
+  // UseEffect để cập nhật selectedVariant khi selectedAttributes thay đổi
   useEffect(() => {
     if (!product) return;
 
+    // --- LOGIC TÌM BIẾN THỂ ĐÃ SỬA ---
     const matchedVariant = product.productVariants.find(variant => {
-      const allSelectedAttrsMatch = Object.entries(selectedAttributes).every(([attrName, attrValue]) => {
+      // Kiểm tra xem biến thể này có chứa TẤT CẢ các thuộc tính đã được chọn hay không
+      const hasAllSelectedAttributes = Object.entries(selectedAttributes).every(([attrName, attrValue]) => {
         const variantAttr = variant.attributes.find(a => a.attributeName === attrName);
         return variantAttr && variantAttr.attributeValue.some(av => av.value === attrValue);
       });
-      const requiredAttributeNames = Array.from(new Set(product.productVariants.flatMap(v => v.attributes.map(a => a.attributeName))));
-      const allRequiredAttributesSelected = requiredAttributeNames.every(name => selectedAttributes[name] !== undefined && selectedAttributes[name] !== '');
 
-      return allSelectedAttrsMatch && allRequiredAttributesSelected;
+      // Kiểm tra số lượng thuộc tính đã chọn có khớp với số lượng thuộc tính của biến thể
+      // Đây là phần quan trọng để tránh lỗi "expected 2, got 6"
+      const selectedAttributeCount = Object.keys(selectedAttributes).length;
+      const variantAttributeCount = variant.attributes.length;
+      const attributeCountsMatch = selectedAttributeCount === variantAttributeCount;
+
+      return hasAllSelectedAttributes && attributeCountsMatch;
     });
 
     setSelectedVariant(matchedVariant || null);
-    setQuantity(1);
+    setQuantity(1); // Reset quantity when variant changes
   }, [selectedAttributes, product]);
 
   const uniqueProductImages = useMemo(() => {
@@ -180,7 +187,7 @@ export default function ProductDetail() {
   const discountPercentage = 0;
   const displayPrice = selectedVariant ? selectedVariant.price : (product.productVariants[0]?.price || 0);
   const displayOriginalPrice = 0;
-  const displayStock = selectedVariant ? selectedVariant.stock : (product.productVariants[0]?.stock || 0);
+  const displayStock = selectedVariant ? product.productVariants.find(v => v.id === selectedVariant.id)?.stock || 0 : (product.productVariants[0]?.stock || 0);
   const totalReviews = product.purchase ?? 0;
   const fixedRating = 5;
 
@@ -217,10 +224,28 @@ export default function ProductDetail() {
     }
 
     try {
-      await addToCart(product, quantity, selectedVariant.id, attributeValueIds);
-      toast.success(`Đã thêm ${quantity} x ${product.name} vào giỏ hàng thành công!`, { position: 'top-right' });
-      if (action === 'buy') {
-        router.push('/checkout');
+      if (action === 'add') {
+        await addToCart(product, quantity, selectedVariant.id, attributeValueIds);
+        toast.success(`Đã thêm ${quantity} x ${product.name} vào giỏ hàng thành công!`, { position: 'top-right' });
+      } else if (action === 'buy') {
+        const orderItems: OrderItemRequest[] = [{
+          productId: selectedVariant.productId,
+          attributeValueIds: attributeValueIds,
+          quantity: quantity,
+        }];
+        const requestBody: CreateOrderRequest = {
+          items: orderItems,
+          shippingAddressId: 0,
+          paymentMethod: '',
+          fromCart: false,
+          notes: '',
+        };
+        const res = await createOrder(requestBody);
+        if (res.code === 1000) {
+           router.push('/checkout');
+        } else {
+           throw new Error(res.message || "Lỗi khi tạo đơn hàng để thanh toán.");
+        }
       }
     } catch (err: any) {
       console.error("Lỗi khi thực hiện hành động giỏ hàng:", err);
@@ -230,7 +255,7 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <Toaster position="top-right"  />
+      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
@@ -300,10 +325,10 @@ export default function ProductDetail() {
               </div>
 
               <div className="flex items-center space-x-4 mb-6">
-                <span className="text-3xl font-bold text-purple-600">${displayPrice.toFixed(2)}</span>
+                <span className="text-3xl font-bold text-purple-600">${displayPrice.toLocaleString('vi-VN')} ₫</span>
                 {displayOriginalPrice > 0 && (
                   <>
-                    <span className="text-xl text-gray-500 line-through">${displayOriginalPrice.toFixed(2)}</span>
+                    <span className="text-xl text-gray-500 line-through">${displayOriginalPrice.toLocaleString('vi-VN')} ₫</span>
                     <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium">
                       Tiết kiệm {discountPercentage}%
                     </span>
@@ -312,7 +337,7 @@ export default function ProductDetail() {
               </div>
 
               <p className="text-gray-600 mb-6 leading-relaxed">
-                {product.metaDescription || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
+                {product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
               </p>
 
               {error && (
@@ -390,6 +415,8 @@ export default function ProductDetail() {
                 >
                   <span>Mua ngay</span>
                 </button>
+                <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                </button>
               </div>
 
               {/* Các tính năng sản phẩm */}
@@ -435,7 +462,7 @@ export default function ProductDetail() {
                 <div className="prose max-w-none">
                   <h3 className="text-lg font-medium mb-4">Mô tả sản phẩm</h3>
                   <p className="text-gray-600 leading-relaxed mb-4">
-                    {product.metaDescription || product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
+                    {product.description || 'Chưa có mô tả chi tiết cho sản phẩm này.'}
                   </p>
                 </div>
               )}

@@ -68,6 +68,49 @@ const startOrder = async(orderData:startOrderReq)=>{
         throw error;
     }
 };
+const getAllOrder = async(params: { keyword?:string;page?: number; size?: number } = {})=>{
+     try {
+        // Giả sử endpoint để tạo order là /orders
+        const response = await axiosClient.get('/order', {
+            params: {
+                keyword: params.keyword,
+                page: params.page || 1,
+                size: params.size || 5,
+            },
+        });
+
+        if (response.data.code === 1000) {
+            return response.data; // Trả về toàn bộ data response nếu thành công
+        } else {
+            console.error('API Error in createOrder:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi tạo đơn hàng.');
+        }
+    } catch (error) {
+        console.error('Network Error in createOrder:', error);
+        throw error;
+    }
+};
+const getAllOrderBySeller = async(params: { keyword?:string;page?: number; size?: number } = {})=>{
+     try {
+        // Giả sử endpoint để tạo order là /orders
+        const response = await axiosClient.get('/order/seller', {
+            params: {
+                page: params.page || 1,
+                size: params.size || 5,
+            },
+        });
+
+        if (response.data.code === 1000) {
+            return response.data; // Trả về toàn bộ data response nếu thành công
+        } else {
+            console.error('API Error in createOrder:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi tạo đơn hàng.');
+        }
+    } catch (error) {
+        console.error('Network Error in createOrder:', error);
+        throw error;
+    }
+};
 const GetOrder = async () => {
   return await axiosClient.get(`/order`);
 };
@@ -75,4 +118,26 @@ const GetOrder = async () => {
 const GetOrderById = async (id: number) => {
   return await axiosClient.get(`/order/${id}`);
 };
-export { createOrder, GetOrder, GetOrderById,getInit,startOrder };
+
+// Generate QR code image from QR code string
+const generateQRCode = async (qrCode: string) => {
+    try {
+        const response = await axiosClient.get('/order/qr', {
+            params: {
+                qrCode: qrCode
+            }
+        });
+
+        if (response.data.code === 1000) {
+            return response.data; // Returns the QR image URL
+        } else {
+            console.error('API Error in generateQRCode:', response.data.code, response.data.message);
+            throw new Error(response.data.message || 'Lỗi khi tạo mã QR.');
+        }
+    } catch (error) {
+        console.error('Network Error in generateQRCode:', error);
+        throw error;
+    }
+};
+
+export { createOrder, GetOrder, GetOrderById, getInit, startOrder, getAllOrder, getAllOrderBySeller, generateQRCode };

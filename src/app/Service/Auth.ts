@@ -42,11 +42,22 @@ const exchangeCodeForToken = async (authCode: string) => {
   }
 };
 
+const logout = async (token: string) => {
+  try {
+    const response = await axiosClient.post("/auth/logout", { token });
+    return response;
+  } catch (error: any) {
+    console.error("Error during logout:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to logout.');
+  }
+};
+
 export { 
   createUser, 
   activeUser, 
   sendCode, 
   login, 
   refreshToken, 
-  exchangeCodeForToken // Export hàm mới
+  exchangeCodeForToken, // Export hàm mới
+  logout // Export logout function
 };

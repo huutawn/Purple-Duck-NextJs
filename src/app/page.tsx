@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import ProductCard from "@/components/common/ProductCard";
+import CategoryCard from "@/components/common/CategoryCard";
 import { GetAllCategory } from "@/app/Service/Category";
 import { GetTop5MostPurchase, GetTop5New } from "@/app/Service/products";
 
@@ -22,7 +23,9 @@ import { Product, ProductVariant } from "@/app/types/product";
 type CategoryForHome = {
   id: number;
   name: string;
-  description: string; // Loại bỏ slug vì không có
+  description: string;
+  image: string;
+  displayOrder?: number;
 };
 
 export default function Home() {
@@ -54,40 +57,13 @@ export default function Home() {
     );
   };
 
-  const processProductData = (products: any[]): Product[] => {
-    return products.map((product) => {
-      const categoryFound = categories.find((cat) => cat.id === product.categoryId);
-      const categoryName = categoryFound ? categoryFound.name : "Không xác định";
-
-      return {
-        id: product.id,
-        categoryId: product.categoryId,
-        categoryName: categoryName,
-        sellerId: product.sellerId,
-        name: product.name,
-        slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-"),
-        coverImage:
-          product.coverImage ||
-          (product.images && product.images.length > 0
-            ? product.images[0].imageUrl
-            : "/placeholder.png"),
-        images: product.images,
-        metaTitle: product.metaTitle || null,
-        purchase: product.purchase ?? 0,
-        metaDescription: product.metaDescription || null,
-        warrantyInfo: product.warrantyInfo || "",
-        createdAt: product.createdAt,
-        productVariants: product.productVariants,
-        active: product.active,
-      };
-    });
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        // First fetch categories
         const categoryRes = await GetAllCategory();
         console.log("Category Response:", categoryRes); // Debug dữ liệu từ API
         let fetchedCategories: CategoryForHome[] = [];
@@ -97,6 +73,8 @@ export default function Home() {
             id: cat.id,
             name: cat.name,
             description: cat.description || `Khám phá sản phẩm trong danh mục ${cat.name}`,
+            image: cat.image || 'https://images.pexels.com/photos/1619844/pexels-photo-1619844.jpeg?auto=compress&cs=tinysrgb&w=400',
+            displayOrder: cat.displayOrder || 0,
           }));
           if (fetchedCategories.length === 0) {
             throw new Error("Không có danh mục nào được trả về từ API.");
@@ -107,9 +85,40 @@ export default function Home() {
         }
         setCategories(fetchedCategories);
 
+        // Create processProductData function with categories
+        const processProducts = (products: any[]): Product[] => {
+          return products.map((product) => {
+            const categoryFound = fetchedCategories.find((cat) => cat.id === product.categoryId);
+            const categoryName = categoryFound ? categoryFound.name : "Không xác định";
+
+            return {
+              id: product.id,
+              categoryId: product.categoryId,
+              categoryName: categoryName,
+              sellerId: product.sellerId,
+              name: product.name,
+              slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-"),
+              coverImage:
+                product.coverImage ||
+                (product.images && product.images.length > 0
+                  ? product.images[0].imageUrl
+                  : "/placeholder.png"),
+              images: product.images,
+              metaTitle: product.metaTitle || null,
+              purchase: product.purchase ?? 0,
+              metaDescription: product.metaDescription || null,
+              warrantyInfo: product.warrantyInfo || "",
+              createdAt: product.createdAt,
+              productVariants: product.productVariants,
+              active: product.active,
+            };
+          });
+        };
+
+        // Now fetch products with categories available
         const topPurchaseRes = await GetTop5MostPurchase();
         if (topPurchaseRes.code === 1000 && Array.isArray(topPurchaseRes.result?.data)) {
-          setFeaturedProducts(processProductData(topPurchaseRes.result.data));
+          setFeaturedProducts(processProducts(topPurchaseRes.result.data));
         } else {
           console.warn("API GetTop5MostPurchase didn't return expected data or format:", topPurchaseRes);
           throw new Error(topPurchaseRes.message || "Lỗi khi tải sản phẩm nổi bật.");
@@ -117,7 +126,7 @@ export default function Home() {
 
         const topNewRes = await GetTop5New();
         if (topNewRes.code === 1000 && Array.isArray(topNewRes.result?.data)) {
-          setNewProducts(processProductData(topNewRes.result.data));
+          setNewProducts(processProducts(topNewRes.result.data));
         } else {
           console.warn("API GetTop5New didn't return expected data or format:", topNewRes);
           throw new Error(topNewRes.message || "Lỗi khi tải sản phẩm mới.");
@@ -228,6 +237,74 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Phần Danh Mục */}
+      <section ref={categoriesSectionRef} className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Mua Sắm Theo Danh Mục
+            </h2>
+            <p className="text-xl text-gray-600">
+              Khám phá các danh mục sản phẩm được tuyển chọn cẩn thận của chúng tôi
+            </p>
+          </div>
+          
+          {loading ? (
+            <div className="text-center text-gray-500">Đang tải danh mục...</div>
+          ) : error ? (
+            <div className="text-center text-red-600">{error}</div>
+          ) : categories.length > 0 ? (
+            <div className="relative">
+              {/* Navigation buttons */}
+              {categories.length > categoriesPerPage && (
+                <>
+                  <button
+                    onClick={handlePrevCategory}
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                    aria-label="Previous categories"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleNextCategory}
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-shadow"
+                    aria-label="Next categories"
+                  >
+                    <ChevronRight className="w-6 h-6 text-gray-600" />
+                  </button>
+                </>
+              )}
+              
+              {/* Categories grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {visibleCategories.map((category) => (
+                  <CategoryCard key={category.id} category={category} />
+                ))}
+              </div>
+              
+              {/* Pagination dots */}
+              {categories.length > categoriesPerPage && (
+                <div className="flex justify-center mt-8 space-x-2">
+                  {Array.from({ length: Math.ceil(categories.length / categoriesPerPage) }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentCategoryIndex(index)}
+                      className={`w-3 h-3 rounded-full transition-colors ${
+                        index === currentCategoryIndex
+                          ? 'bg-purple-600'
+                          : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Go to category page ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500">Không tìm thấy danh mục nào.</div>
+          )}
+        </div>
+      </section>
 
       {/* Phần Sản Phẩm Nổi Bật */}
       <section className="py-16 bg-white">

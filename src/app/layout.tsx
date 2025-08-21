@@ -9,15 +9,15 @@ import LayoutWrapper from './LayoutWrapper' // Import component con
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PurpleDuck - Premium E-commerce',
-  description: 'Your premium destination for quality products and exceptional shopping experience.',
-  keywords: 'ecommerce, shopping, premium products, online store',
-  authors: [{ name: 'PurpleDuck Team' }],
+  title: 'PurpleDuck - Thương mại điện tử cao cấp',
+  description: 'Điểm đến cao cấp của bạn cho các sản phẩm chất lượng và trải nghiệm mua sắm đặc biệt.',
+  keywords: 'thương mại điện tử, mua sắm, sản phẩm cao cấp, cửa hàng trực tuyến',
+  authors: [{ name: 'Đội ngũ PurpleDuck' }],
   openGraph: {
-    title: 'PurpleDuck - Premium E-commerce',
-    description: 'Your premium destination for quality products and exceptional shopping experience.',
+    title: 'PurpleDuck - Thương mại điện tử cao cấp',
+    description: 'Điểm đến cao cấp của bạn cho các sản phẩm chất lượng và trải nghiệm mua sắm đặc biệt.',
     type: 'website',
-    locale: 'en_US',
+    locale: 'vi_VN',
   },
 }
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body className={inter.className}>
         <AppProvider>
           <LayoutWrapper>{children}</LayoutWrapper>

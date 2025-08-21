@@ -70,11 +70,14 @@ export default function Header() {
   }, [appState.user, dispatch]);
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?keyword=${encodeURIComponent(searchQuery)}`);
+      setIsMenuOpen(false); // Đóng menu mobile sau khi search
+    } else {
+      router.push('/products');
     }
-  };
+  };
 
   const handleLogout = () => {
     dispatch({ type: 'SET_USER', payload: null }); // Hoặc dùng 'LOGOUT' nếu đã có action riêng
@@ -116,7 +119,7 @@ export default function Header() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Tìm kiếm sản phẩm..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -133,7 +136,7 @@ export default function Header() {
                 onClick={handleSellerClick}
                 className="text-purple-600 hover:text-purple-700 font-medium text-sm border border-purple-600 px-3 py-1 rounded-lg hover:bg-purple-50 transition-colors"
               >
-                Want to be a Seller?
+Muốn trở thành Người bán?
               </button>
               <Link href="/messages" className="text-gray-600 hover:text-purple-600 transition-colors">
                 <MessageCircle className="w-6 h-6" />
@@ -171,14 +174,14 @@ export default function Header() {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
-                        Profile
+Hồ sơ
                       </Link>
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
-                        Logout
+Đăng xuất
                       </button>
                     </div>
                   )}
@@ -188,7 +191,7 @@ export default function Header() {
                   href="/login"
                   className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  Sign In
+Đăng nhập
                 </Link>
               )}
             </div>
@@ -210,7 +213,7 @@ export default function Header() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Tìm kiếm sản phẩm..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -229,21 +232,21 @@ export default function Header() {
               className="block px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Messages
+Tin nhắn
             </Link>
             <Link
               href="/wishlist"
               className="block px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Wishlist
+Yêu thích
             </Link>
             <Link
               href="/cart"
               className="block px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-md flex items-center justify-between"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span>Cart</span>
+              <span>Giỏ hàng</span>
               {cartItemCount > 0 && (
                 <span className="bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {cartItemCount}
@@ -257,7 +260,7 @@ export default function Header() {
                   className="block px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-md"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Account
+Tài khoản
                 </Link>
                 <button
                   onClick={() => {
@@ -267,7 +270,7 @@ export default function Header() {
                   className="block w-full text-left px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-gray-50 rounded-md flex items-center"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+Đăng xuất
                 </button>
               </>
             ) : (
@@ -276,7 +279,7 @@ export default function Header() {
                 className="block px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Sign In
+Đăng nhập
               </Link>
             )}
           </div>

@@ -222,7 +222,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose }) =>
         const productData: CreateProductRequest = {
             categoryId: categoryIdToSend,
             name: productInfo.name,
+            description: productInfo.description,
             slug: productInfo.slug,
+            metaDescription: productInfo.productDescription,
             images: productInfo.productImages,
             coverImage: productInfo.coverImage,
             warrantyInfo: productInfo.warrantyInfo,
