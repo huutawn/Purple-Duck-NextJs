@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   images: {
     // Thêm 'res.cloudinary.com' và 'example.com' vào mảng domains
     domains: ['images.pexels.com', 'res.cloudinary.com', 'example.com'],
