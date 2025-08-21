@@ -37,9 +37,12 @@ export default function Header() {
         if (userData) {
           const mappedUser = {
             id: String(userData.id),
-            name: userData.fullName, // Map fullName to name
+            name: (userData as any).fullName || (userData as any).name || 'User', // Map fullName to name
             email: userData.email,
-            role: (userData.roles[0]?.name || '').toLowerCase(), // Map to string
+            firstName: (userData as any).firstName || 'Unknown',
+            lastName: (userData as any).lastName || '',
+            addresses: [], // Initialize as empty array
+            role: ((userData as any).roles?.[0]?.name || '').toLowerCase(), // Map to string
             // Add other fields if needed in AppContext's User type, e.g., createdAt if required
           };
           dispatch({ type: 'SET_USER', payload: mappedUser });
@@ -59,9 +62,12 @@ export default function Header() {
         const userData = storeState.User;
         const mappedUser = {
           id: String(userData.id),
-          name: userData.fullName,
+          name: (userData as any).fullName || (userData as any).name || 'User',
           email: userData.email,
-          role: (userData.roles[0]?.name || '').toLowerCase(),
+          firstName: (userData as any).firstName || 'Unknown',
+          lastName: (userData as any).lastName || '',
+          addresses: [], // Initialize as empty array
+          role: ((userData as any).roles?.[0]?.name || '').toLowerCase(),
         };
         dispatch({ type: 'SET_USER', payload: mappedUser });
       }

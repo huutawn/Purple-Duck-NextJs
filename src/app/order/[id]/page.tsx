@@ -7,7 +7,8 @@ import Image from 'next/image';
 import { ArrowLeft, Package, Truck, CheckCircle, Clock, MapPin, Phone, Mail } from 'lucide-react';
 
 export default function OrderDetail() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
 
   // Mock order data
   const order = {

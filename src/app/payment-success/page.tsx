@@ -1,22 +1,24 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, ArrowRight, QrCode } from 'lucide-react';
 
-export default function PaymentSuccess() {
+function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const [orderInfo, setOrderInfo] = useState<{orderId?: string, qrCode?: string}>({});
 
   useEffect(() => {
-    const orderId = searchParams.get('orderId');
-    const qrCode = searchParams.get('qrCode');
-    
-    setOrderInfo({
-      orderId: orderId || undefined,
-      qrCode: qrCode || undefined
-    });
+    if (searchParams) {
+      const orderId = searchParams.get('orderId');
+      const qrCode = searchParams.get('qrCode');
+      
+      setOrderInfo({
+        orderId: orderId || undefined,
+        qrCode: qrCode || undefined
+      });
+    }
   }, [searchParams]);
 
   return (
@@ -77,5 +79,13 @@ export default function PaymentSuccess() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccess() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

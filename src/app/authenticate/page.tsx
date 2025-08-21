@@ -1,7 +1,7 @@
 // app/authenticate/page.tsx
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { exchangeCodeForToken } from "@/app/Service/Auth";
 import Cookies from 'js-cookie';
@@ -9,7 +9,7 @@ import { useProfileStore } from "@/app/zustand/store";
 
 import Loading from "@/components/common/Loading";
 
-export default function AuthenticatePage() {
+function AuthenticatePageContent() {
     const { fetchProfile, fetchCart } = useProfileStore();
 
   const router = useRouter();
@@ -109,5 +109,13 @@ export default function AuthenticatePage() {
         Go to Login
       </button>
     </div>
+  );
+}
+
+export default function AuthenticatePage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <AuthenticatePageContent />
+    </Suspense>
   );
 }

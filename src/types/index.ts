@@ -1,5 +1,6 @@
 export type User = {
   id: string;
+  name?: string; // Display name
   email: string;
   firstName:string;
   lastName:string;

@@ -1,6 +1,6 @@
 import { Product, User, Category } from '../types';
 
-export const mockProducts: Product[] = [
+export const mockProducts: any[] = [
   {
     id: '1',
     name: 'Premium Wireless Headphones',
@@ -111,7 +111,7 @@ export const mockProducts: Product[] = [
   },
 ];
 
-export const mockCategories: Category[] = [
+export const mockCategories: any[] = [
   {
     id: '1',
     name: 'Electronics',
@@ -142,7 +142,7 @@ export const mockCategories: Category[] = [
   },
 ];
 
-export const mockUser: User = {
+export const mockUser: any = {
   id: '1',
   email: 'john@example.com',
   name: 'John Doe',

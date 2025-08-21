@@ -97,6 +97,7 @@ export default function Home() {
               categoryName: categoryName,
               sellerId: product.sellerId,
               name: product.name,
+              description: product.description || product.metaDescription || "Mô tả sản phẩm",
               slug: product.slug || product.name.toLowerCase().replace(/\s+/g, "-"),
               coverImage:
                 product.coverImage ||

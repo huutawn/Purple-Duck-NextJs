@@ -74,7 +74,7 @@ const ProductsPage: React.FC = () => {
         let fetchedCategories: CategoryOption[] = [{ id: 'all', name: 'Tất Cả Danh Mục' }];
 
         if (categoriesRes.data && Array.isArray(categoriesRes.data.result)) {
-          fetchedCategories = [...fetchedCategories, ...categoriesRes.data.result.map(cat => ({ id: cat.id, name: cat.name }))];
+          fetchedCategories = [...fetchedCategories, ...categoriesRes.data.result.map((cat: any) => ({ id: cat.id, name: cat.name }))];
         } else {
           console.warn("Dữ liệu danh mục không đúng định dạng:", categoriesRes);
         }
@@ -84,7 +84,7 @@ const ProductsPage: React.FC = () => {
         const productsRes = await GetAllProductsMySeller(params);
         setTotalElements(productsRes.result.totalElements);
 
-        const productsWithCategoryName: Product[] = productsRes.result.data.map(product => {
+        const productsWithCategoryName: Product[] = productsRes.result.data.map((product: any) => {
           const categoryFound = fetchedCategories.find(cat => cat.id === product.categoryId);
           return {
             ...product,

@@ -6,64 +6,30 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Filter, Grid, List, ChevronDown, ArrowLeft } from 'lucide-react';
 import ProductCard from '@/components/common/ProductCard';
-import { mockProducts, mockCategories } from '@/data/mockData';
-import { Product } from '@/types';
+import { Product } from '@/app/types/product';
 
 export default function Category() {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string }>();
+  const slug = params?.slug;
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-
-  const category = mockCategories.find(cat => cat.slug === slug);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (category) {
-      let filtered = mockProducts.filter(product => 
-        product.category.toLowerCase() === category.name.toLowerCase()
-      );
+    // TODO: Replace with actual API call
+    // fetchCategoryProducts(slug).then(setFilteredProducts)
+    setLoading(false);
+  }, [slug, priceRange, sortBy]);
 
-      // Filter by price range
-      filtered = filtered.filter(product => 
-        product.price >= priceRange[0] && product.price <= priceRange[1]
-      );
-
-      // Sort products
-      switch (sortBy) {
-        case 'price-low':
-          filtered.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          filtered.sort((a, b) => b.price - a.price);
-          break;
-        case 'rating':
-          filtered.sort((a, b) => b.rating - a.rating);
-          break;
-        case 'newest':
-          filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          break;
-        default:
-          break;
-      }
-
-      setFilteredProducts(filtered);
-    }
-  }, [category, priceRange, sortBy]);
-
-  if (!category) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h2>
-          <p className="text-gray-600 mb-6">The category you're looking for doesn't exist.</p>
-          <Link
-            href="/products"
-            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            Browse All Products
-          </Link>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading category...</p>
         </div>
       </div>
     );
@@ -73,14 +39,6 @@ export default function Category() {
     <div className="min-h-screen bg-gray-50">
       {/* Category Hero */}
       <div className="relative h-64 bg-gradient-to-r from-purple-600 to-purple-800">
-        <div className="absolute inset-0">
-          <Image
-            src={category.image}
-            alt={category.name}
-            fill
-            className="object-cover opacity-30"
-          />
-        </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="text-white">
             <Link
@@ -90,8 +48,8 @@ export default function Category() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
             </Link>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{category.name}</h1>
-            <p className="text-xl text-purple-100 max-w-2xl">{category.description}</p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{slug}</h1>
+            <p className="text-xl text-purple-100 max-w-2xl">Browse products in this category</p>
           </div>
         </div>
       </div>
@@ -101,7 +59,7 @@ export default function Category() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {category.name} Products
+              Category Products
             </h2>
             <p className="text-gray-600">
               {filteredProducts.length} products found

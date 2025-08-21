@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -107,7 +107,7 @@ const CreateAddressModal = ({ isOpen, onClose, onCreateSuccess }: { isOpen: bool
     );
 };
 
-export default function Checkout() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { User: user, fetchProfile } = useProfileStore();
@@ -356,5 +356,13 @@ export default function Checkout() {
           onCreateSuccess={handleAddressCreated}
       />
     </div>
+  );
+}
+
+export default function Checkout() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

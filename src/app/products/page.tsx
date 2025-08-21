@@ -1,13 +1,13 @@
 'use client';
 import { useSearchParams } from 'next/navigation'; // Import hook để lấy query params
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Filter, Grid, List, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/common/ProductCard';
 import { GetAllProducts, GetAllProductsByCategory,searchProduct } from '@/app/Service/products'; // Thêm GetAllProductsByCategory
 import { GetAllCategory } from '@/app/Service/Category';
 
-import { Product } from '@/types'; 
+import { Product } from '@/app/types/product';
 
 // Tái định nghĩa CategoryForFilter để khớp với API category
 type CategoryForFilter = {
@@ -22,7 +22,7 @@ interface ProductWithMinPrice extends Product {
     reviews: number;
 }
 
-export default function Products() {
+function ProductsContent() {
   const searchParams = useSearchParams();
   // --- SỬA LỖI: KIỂM TRA searchParams CÓ TỒN TẠI TRƯỚC KHI GỌI GET ---
   const [keyword, setKeyword] = useState('');
@@ -88,6 +88,7 @@ export default function Products() {
 
       return {
         ...product,
+        description: product.description || product.metaDescription || "Mô tả sản phẩm",
         categoryName: categoryName,
         minPrice: minPrice,
         rating: 5,
@@ -209,8 +210,33 @@ export default function Products() {
     }
   };
   
-  if (loading) { /* ... loading state ... */ }
-  if (error) { /* ... error state ... */ }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải sản phẩm...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Có lỗi xảy ra</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -399,5 +425,13 @@ export default function Products() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Products() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }
