@@ -20,7 +20,7 @@ class WebSocketService {
         return new Promise((resolve, reject) => {
             try {
                 // Create SockJS connection
-                const socket = new SockJS(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080' || 'http://165.22.246.17'}/ws`);
+                const socket = new SockJS(`${process.env.NEXT_PUBLIC_API_BASE_URL ||'http://165.22.246.17'|| 'http://localhost:8080' }/ws`);
                 
                 this.stompClient = new Client({
                     webSocketFactory: () => socket,
