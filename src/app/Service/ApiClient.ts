@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import { refreshToken } from "@/app/Service/Auth";
 
 export const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ||"http://165.22.246.17/api",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ||"https://purpleduck.io.vn/api",
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
