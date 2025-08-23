@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { CreditCard, Lock, CheckCircle, QrCode, ClipboardList, MapPin, Plus } from 'lucide-react';
+import {  CheckCircle, QrCode, ClipboardList, MapPin, Plus } from 'lucide-react';
 import { getInit, startOrder, CreateOrderRequest, startOrderReq } from '@/app/Service/Order';
 import { getAddress, createAddress, CreateAddressReq } from '@/app/Service/address';
 import { useProfileStore } from '@/app/zustand/store';
@@ -183,16 +183,16 @@ function CheckoutContent() {
     try {
       const res = await startOrder(startOrderData);
       if (res.code === 1000) {
-        if (isQR && res.result.QRCode) {
+        if (isQR && res.result.qrcode) {
           // For QR payment, show QR payment component
           setQrPaymentData({
             orderId: res.result.orderId,
-            qrCode: res.result.QRCode
+            qrCode: res.result.qrcode
           });
           setShowQRPayment(true);
         } else {
           // For COD payment, redirect to success page
-          router.push(`/payment-success?orderId=${res.result.orderId}`);
+          router.push(`/payment-success?orderId=${res.result.QRCode}`);
         }
       } else {
         setError(res.message || 'Có lỗi xảy ra khi đặt hàng.');

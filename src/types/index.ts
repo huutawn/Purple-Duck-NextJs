@@ -191,7 +191,7 @@ export type OrderResponse = {
   trackingNumber?: string;
   shippingCarrier?: string;
   estimatedDeliveryDate?: string;
-  QRCode?: string;
+  qrcode?: string;
   note?: string;
   createdAt: string;
 };
