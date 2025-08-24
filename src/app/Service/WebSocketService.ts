@@ -30,7 +30,7 @@ class WebSocketService {
 
   private initializeClient() {
     // Use the backend WebSocket endpoint
-    const WEBSOCKET_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:8080/ws';
+    const WEBSOCKET_URL = 'https://purpleduck.io.vn/ws';
     
     this.client = new Client({
       webSocketFactory: () => new SockJS(WEBSOCKET_URL),
