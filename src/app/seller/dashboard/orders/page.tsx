@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   Search, Filter, Download, Eye, Package, Truck, CheckCircle, Clock,
-  AlertCircle, MoreHorizontal, ChevronLeft, ChevronRight
+  AlertCircle, MoreHorizontal, ChevronLeft, ChevronRight, Wifi, WifiOff, Bell
 } from 'lucide-react';
 import { getAllOrderBySeller } from '@/app/Service/Order';
-import { SubOrderResponse } from '@/types';
+import { SubOrderResponse, NewOrderMessage } from '@/types';
+import { exportWarehouseOrdersPDF, exportSingleOrderPDF } from '@/utils/pdfExport';
+import webSocketService from '@/app/Service/WebSocketService';
+import { getSellerProfile } from '@/app/Service/Seller';
+import { toast } from 'react-hot-toast';
 
 const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<SubOrderResponse[]>([]);
@@ -17,6 +21,12 @@ const OrdersPage: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
+  
+  // WebSocket state
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const subscriptionIds = useRef<string[]>([]);
+  const sellerId = useRef<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -41,6 +51,142 @@ const OrdersPage: React.FC = () => {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    let mounted = true;
+
+    const initializeWebSocket = async () => {
+      try {
+        // First get seller profile to get seller ID
+        const sellerProfileResponse = await getSellerProfile();
+        if (!mounted) return;
+        
+        if (sellerProfileResponse.code === 1000 && sellerProfileResponse.result.sellerId) {
+          sellerId.current = sellerProfileResponse.result.sellerId.toString();
+          console.log('Seller ID found:', sellerId.current);
+          
+          // Connect to WebSocket
+          await webSocketService.connect();
+          if (!mounted) return;
+          
+          setIsWebSocketConnected(true);
+          
+          // Setup subscriptions with seller ID
+          setupWebSocketSubscriptions(sellerId.current);
+          
+          toast.success('Kết nối thời gian thực đã sẵn sàng!');
+        } else {
+          console.error('Could not get seller ID from profile');
+          toast.error('Không thể lấy thông tin người bán');
+        }
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        if (mounted) {
+          setIsWebSocketConnected(false);
+          toast.error('Không thể kết nối thời gian thực');
+        }
+      }
+    };
+
+    initializeWebSocket();
+
+    // Cleanup on unmount
+    return () => {
+      mounted = false;
+      cleanupWebSocketSubscriptions();
+      webSocketService.disconnect();
+    };
+  }, []);
+
+  // Setup WebSocket subscriptions
+  const setupWebSocketSubscriptions = (sellerIdStr: string) => {
+    // Subscribe to new orders
+    const newOrderSubscription = webSocketService.subscribeToSellerOrders(
+      sellerIdStr,
+      handleNewOrderReceived
+    );
+    subscriptionIds.current.push(newOrderSubscription);
+
+    // Subscribe to order status updates
+    const orderUpdateSubscription = webSocketService.subscribeToOrderUpdates(
+      sellerIdStr,
+      handleOrderStatusUpdate
+    );
+    subscriptionIds.current.push(orderUpdateSubscription);
+  };
+
+  // Cleanup WebSocket subscriptions
+  const cleanupWebSocketSubscriptions = () => {
+    subscriptionIds.current.forEach(id => {
+      webSocketService.unsubscribe(id);
+    });
+    subscriptionIds.current = [];
+  };
+
+  // Handle new order received via WebSocket
+  const handleNewOrderReceived = useCallback((newOrderMessage: NewOrderMessage) => {
+    console.log('New order received:', newOrderMessage);
+    
+    // Convert NewOrderMessage to SubOrderResponse format
+    const newSubOrder: SubOrderResponse = {
+      subOrderId: newOrderMessage.subOrderId,
+      orderId: newOrderMessage.orderId,
+      userName: newOrderMessage.customerName,
+      status: newOrderMessage.status,
+      orderItems: newOrderMessage.orderItems,
+      address: newOrderMessage.address,
+      subTotal: newOrderMessage.subTotal,
+      createdAt: newOrderMessage.createdAt,
+    };
+
+    // Add new order to the top of the list
+    setOrders(prevOrders => [newSubOrder, ...prevOrders]);
+    setNewOrdersCount(prev => prev + 1);
+    
+    // Show notification
+    toast.success(`Đơn hàng mới #${newOrderMessage.subOrderId} từ ${newOrderMessage.customerName}`, {
+      duration: 5000,
+      icon: '🛒',
+    });
+
+    // Play notification sound (optional)
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.play().catch(e => console.log('Could not play notification sound:', e));
+    } catch (e) {
+      // Ignore audio errors
+    }
+  }, []);
+
+  // Handle order status update via WebSocket
+  const handleOrderStatusUpdate = useCallback((updatedOrder: SubOrderResponse) => {
+    console.log('Order status updated:', updatedOrder);
+    
+    // Update the order in the list
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.subOrderId === updatedOrder.subOrderId ? updatedOrder : order
+      )
+    );
+    
+  
+  }, []);
+
+  // Reset new orders count when user interacts with the page
+  const resetNewOrdersCount = () => {
+    setNewOrdersCount(0);
+  };
+
+  // Test WebSocket connection
+  const testWebSocketConnection = () => {
+    if (webSocketService.isConnected()) {
+      webSocketService.testConnection();
+      toast.success('Test message sent!');
+    } else {
+      toast.error('WebSocket is not connected');
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -116,6 +262,19 @@ const OrdersPage: React.FC = () => {
     setPage(1);
   };
 
+  // PDF Export handlers
+  const handleExportAllOrders = () => {
+    if (filteredOrders.length === 0) {
+      alert('Không có đơn hàng nào để xuất.');
+      return;
+    }
+    exportWarehouseOrdersPDF(filteredOrders);
+  };
+
+  const handleExportSingleOrder = (order: SubOrderResponse) => {
+    exportSingleOrderPDF(order);
+  };
+
   if (loading) {
     return <div className="p-6 text-center text-white">Đang tải đơn hàng...</div>;
   }
@@ -125,7 +284,7 @@ const OrdersPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6" onClick={resetNewOrdersCount}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -133,14 +292,58 @@ const OrdersPage: React.FC = () => {
           <p className="text-gray-300 mt-1">Quản lý và theo dõi tất cả đơn hàng</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/15 text-white px-4 py-2 rounded-xl border border-purple-500/20">
+          {/* WebSocket Status Indicator */}
+          <div className="flex items-center space-x-2 px-3 py-2 rounded-xl border border-purple-500/20 bg-white/5">
+            {isWebSocketConnected ? (
+              <>
+                <Wifi className="w-4 h-4 text-green-400" />
+                <span className="text-green-400 text-sm">Trực tuyến</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4 text-red-400" />
+                <span className="text-red-400 text-sm">Ngoại tuyến</span>
+              </>
+            )}
+          </div>
+          
+          {/* New Orders Notification */}
+          {newOrdersCount > 0 && (
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                resetNewOrdersCount();
+              }}
+              className="relative flex items-center space-x-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 px-4 py-2 rounded-xl border border-green-500/30 transition-colors"
+            >
+              <Bell className="w-4 h-4" />
+              <span>{newOrdersCount} đơn mới</span>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            </button>
+          )}
+          
+          <button 
+            onClick={handleExportAllOrders}
+            className="flex items-center space-x-2 bg-white/10 hover:bg-white/15 text-white px-4 py-2 rounded-xl border border-purple-500/20 transition-colors"
+          >
             <Download className="w-4 h-4" />
-            <span>Xuất báo cáo</span>
+            <span>Xuất Picking List</span>
           </button>
           <button className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl">
             <Filter className="w-4 h-4" />
             <span>Bộ lọc</span>
           </button>
+          
+          {/* Debug WebSocket Test Button - can be removed in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <button 
+              onClick={testWebSocketConnection}
+              className="flex items-center space-x-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 px-3 py-2 rounded-xl border border-yellow-500/30 transition-colors"
+              title="Test WebSocket"
+            >
+              <Wifi className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -217,7 +420,21 @@ const OrdersPage: React.FC = () => {
                   </td>
                   <td className="p-4 text-white">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td className="p-4">
-                    <button className="p-2 text-gray-400 hover:text-white"><Eye className="w-4 h-4" /></button>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                        title="Xem chi tiết"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleExportSingleOrder(order)}
+                        className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
+                        title="Xuất phiếu lấy hàng"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )) : (

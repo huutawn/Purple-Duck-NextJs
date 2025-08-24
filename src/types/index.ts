@@ -222,3 +222,18 @@ export type CreateOrderRequest = {
   notes?: string;
   fromCart?: boolean;
 };
+
+// WebSocket message types
+export type NewOrderMessage = {
+  subOrderId: number;
+  orderId: number;
+  customerName: string;
+  customerEmail: string;
+  status: string;
+  subTotal: number;
+  orderItems: OrderItemResponse[];
+  address: AddressResponse;
+  createdAt: string;
+  paymentMethod: string;
+  notes?: string;
+};
